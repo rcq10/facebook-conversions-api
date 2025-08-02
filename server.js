@@ -1,62 +1,72 @@
 const express = require('express');
-const bodyParser = require('body-parser');
+const bodyParser = require('body-parser'); // Mantive o seu, sem problemas.
 const axios = require('axios');
 const cors = require('cors');
+
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Configuração de CORS para aceitar requisições de qualquer origem
-app.use(cors({
-  origin: '*',
-  methods: 'POST'
-}));
+// --- VERIFICAÇÃO DAS VARIÁVEIS DE AMBIENTE ---
+// Este log vai nos dizer se o Render está lendo suas chaves corretamente.
+console.log('--- Iniciando Servidor ---');
+console.log('Verificando variável FB_PIXEL_ID:', process.env.FB_PIXEL_ID ? '✅ Carregada' : '❌ NÃO ENCONTRADA');
+console.log('Verificando variável FB_ACCESS_TOKEN:', process.env.FB_ACCESS_TOKEN ? '✅ Carregada' : '❌ NÃO ENCONTRADA');
+console.log('---------------------------');
 
+// Middlewares
+app.use(cors());
 app.use(bodyParser.json());
 
+// Rota /purchase, como no seu código original
 app.post('/purchase', async (req, res) => {
-  const { user_data, custom_data, event_name, event_time, action_source, event_id, event_source_url, fbclid } = req.body;
-
-  const eventData = {
-    event_name: event_name || 'Purchase',
-    event_time: event_time || Math.floor(Date.now() / 1000),
-    event_source_url: event_source_url,
-    user_data: {
-      client_user_agent: user_data?.client_user_agent,
-      fbp: user_data?.fbp,
-      client_ip_address: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-    },
-    custom_data: {
-      currency: custom_data?.currency || 'BRL',
-      value: custom_data?.value || 1.00,
-    },
-    action_source: action_source || 'website',
-    event_id: event_id,
-  };
-
-  if (fbclid && fbclid.trim() !== '') {
-    eventData.fbclid = fbclid;
-  }
-
-  const payload = {
-    data: [eventData],
-    test_event_code: null,
-  };
+  console.log('LOG: Requisição recebida em /purchase');
+  const { event_source_url, fbp, fbclid, user_agent } = req.body;
 
   const PIXEL_ID = process.env.FB_PIXEL_ID;
   const ACCESS_TOKEN = process.env.FB_ACCESS_TOKEN;
 
+  // Se as variáveis não foram carregadas, retorna um erro claro.
+  if (!PIXEL_ID || !ACCESS_TOKEN) {
+    console.error('ERRO CRÍTICO: Variáveis de ambiente FB_PIXEL_ID ou FB_ACCESS_TOKEN não estão configuradas no Render.');
+    return res.status(500).json({ status: 'error', message: 'Configuração do servidor incompleta.' });
+  }
+  
+  const payload = {
+    data: [
+      {
+        event_name: 'Purchase',
+        event_time: Math.floor(Date.now() / 1000),
+        action_source: 'website',
+        event_source_url: event_source_url,
+        user_data: {
+          client_ip_address: req.ip,
+          client_user_agent: user_agent,
+          fbp: fbp || undefined,
+          fbc: fbclid ? `fb.1.${Date.now()}.${fbclid}` : undefined,
+        },
+        custom_data: {
+          currency: 'BRL',
+          value: 1.00
+        }
+      }
+    ],
+  };
+
   try {
-    const response = await axios.post(
-      `https://graph.facebook.com/v19.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`,
-      payload
-    );
-    res.status(200).send({ success: true, response: response.data });
+    const url = `https://graph.facebook.com/v19.0/${PIXEL_ID}/events?access_token=${ACCESS_TOKEN}`;
+    await axios.post(url, payload);
+    console.log('LOG: Evento enviado para o Facebook com SUCESSO.');
+    res.status(200).json({ status: 'success' });
   } catch (error) {
-    console.error(error.response ? error.response.data : error.message);
-    res.status(500).send({ success: false, error: error.response?.data });
+    console.error('ERRO: Falha ao enviar evento para o Facebook.', error.response ? error.response.data : error.message);
+    res.status(500).json({ status: 'error' });
   }
 });
 
+app.get('/', (req, res) => {
+  res.send('API está online!');
+});
+
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+  console.log(`LOG: Servidor iniciado na porta ${PORT}`);
 });
