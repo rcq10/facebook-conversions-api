@@ -21,6 +21,7 @@ app.post('/purchase', async (req, res) => {
           client_user_agent: user_data?.client_user_agent,
           fbp: user_data?.fbp,
           client_ip_address: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+          fbclid: user_data?.fbclid, // O fbclid será enviado dentro de user_data
         },
         custom_data: {
           currency: custom_data?.currency || 'BRL',
@@ -28,7 +29,6 @@ app.post('/purchase', async (req, res) => {
         },
         action_source: action_source || 'website',
         event_id: event_id,
-        fbclid: user_data?.fbclid, // fbclid agora está aqui, fora de user_data
       }
     ],
     test_event_code: null,
