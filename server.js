@@ -9,7 +9,15 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.post('/purchase', async (req, res) => {
-  const { user_data, custom_data, event_name, event_time, action_source, event_id, event_source_url, fbc } = req.body;
+  const {
+    user_data,
+    custom_data,
+    event_name,
+    event_time,
+    action_source,
+    event_id,
+    event_source_url
+  } = req.body;
 
   const eventData = {
     event_name: event_name || 'Purchase',
@@ -18,8 +26,8 @@ app.post('/purchase', async (req, res) => {
     user_data: {
       client_user_agent: user_data?.client_user_agent,
       fbp: user_data?.fbp,
+      fbc: user_data?.fbc, // ✅ Agora está dentro do user_data corretamente
       client_ip_address: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-      fbc: fbc, // Agora enviamos o fbc aqui
     },
     custom_data: {
       currency: custom_data?.currency || 'BRL',
@@ -31,7 +39,7 @@ app.post('/purchase', async (req, res) => {
 
   const payload = {
     data: [eventData],
-    test_event_code: null,
+    // test_event_code: 'TEST123', // ❗Ative para testes se quiser validar sem impacto real
   };
 
   const PIXEL_ID = '1124756639573111';
