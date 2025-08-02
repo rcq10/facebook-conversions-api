@@ -9,7 +9,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.post('/purchase', async (req, res) => {
-  const { user_data, custom_data, event_name, event_time, action_source, event_id, event_source_url } = req.body;
+  const { user_data, custom_data, event_name, event_time, action_source, event_id, event_source_url, fbclid } = req.body;
 
   const payload = {
     data: [
@@ -21,7 +21,6 @@ app.post('/purchase', async (req, res) => {
           client_user_agent: user_data?.client_user_agent,
           fbp: user_data?.fbp,
           client_ip_address: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-          fbclid: user_data?.fbclid, // O fbclid será enviado dentro de user_data
         },
         custom_data: {
           currency: custom_data?.currency || 'BRL',
@@ -29,6 +28,7 @@ app.post('/purchase', async (req, res) => {
         },
         action_source: action_source || 'website',
         event_id: event_id,
+        fbclid: fbclid, // fbclid agora está aqui, no nível correto
       }
     ],
     test_event_code: null,
