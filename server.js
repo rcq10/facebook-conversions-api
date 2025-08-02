@@ -20,7 +20,6 @@ app.post('/purchase', async (req, res) => {
         user_data: {
           client_user_agent: user_data?.client_user_agent,
           fbp: user_data?.fbp,
-          fbclid: user_data?.fbclid,
           client_ip_address: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
         },
         custom_data: {
@@ -29,13 +28,14 @@ app.post('/purchase', async (req, res) => {
         },
         action_source: action_source || 'website',
         event_id: event_id,
+        fbclid: user_data?.fbclid, // fbclid agora está aqui, fora de user_data
       }
     ],
-    test_event_code: null, // Deixe como null em produção
+    test_event_code: null,
   };
 
-  const PIXEL_ID = '1124756639573111'; // Seu Pixel ID
-  const ACCESS_TOKEN = 'EAAKSZCfKLHRkBPAWRqy9KF4S8nCr2UUvdKyBw0PfKtn2dI5Q35BehgXfrxERkdPJnRBBV68EBrEiRZAAbZBxOz2ipC7CFGRpmxfOzZA03OFi3ZCtxlj9RErceV6u7gyFgjG9AcVOHPgsLsLrrphJOyl3yaVmwqvwPkvxtPHodZCvTAthZClsrAaXq6EMlEupTtGtAZDZD'; // Seu Token
+  const PIXEL_ID = '1124756639573111';
+  const ACCESS_TOKEN = 'EAAKSZCfKLHRkBPAWRqy9KF4S8nCr2UUvdKyBw0PfKtn2dI5Q35BehgXfrxERkdPJnRBBV68EBrEiRZAAbZBxOz2ipC7CFGRpmxfOzZA03OFi3ZCtxlj9RErceV6u7gyFgjG9AcVOHPgsLsLrrphJOyl3yaVmwqvwPkvxtPHodZCvTAthZClsrAaXq6EMlEupTtGtAZDZD';
 
   try {
     const response = await axios.post(
