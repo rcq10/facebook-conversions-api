@@ -1,12 +1,14 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
+const cors = require('cors'); // Adicionado o pacote CORS
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(cors()); // Ativa o CORS para todas as requisições
 app.use(bodyParser.json());
 
-app.post('/api/conversion', async (req, res) => {
+app.post('/purchase', async (req, res) => { // Endpoint ajustado para '/purchase'
   const {
     event_name,
     event_time,
@@ -18,6 +20,7 @@ app.post('/api/conversion', async (req, res) => {
     purchase_value
   } = req.body;
 
+  // Adicionado o 'fbclid' no 'user_data' e o 'client_user_agent'
   const payload = {
     data: [
       {
@@ -27,7 +30,7 @@ app.post('/api/conversion', async (req, res) => {
         user_data: {
           client_user_agent: user_agent,
           fbp: fbp,
-          fbc: fbclid,
+          fbclid: fbclid, // Corrigido para 'fbclid' em vez de 'fbc'
           client_ip_address: ip_address,
         },
         custom_data: {
