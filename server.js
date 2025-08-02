@@ -1,31 +1,20 @@
-require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const cors = require('cors');
-const { v4: uuidv4 } = require('uuid');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// Configuração de CORS para aceitar requisições de qualquer origem
+app.use(cors({
+  origin: '*',
+  methods: 'POST'
+}));
+
 app.use(bodyParser.json());
 
 app.post('/purchase', async (req, res) => {
-  const {
-    user_data,
-    custom_data,
-    event_name,
-    event_time,
-    action_source,
-    event_id,
-    event_source_url
-  } = req.body;
-
-  const client_ip_address =
-    req.headers['x-forwarded-for']?.split(',')[0] ||
-    req.connection?.remoteAddress ||
-    req.socket?.remoteAddress ||
-    req.connection?.socket?.remoteAddress;
+  const { user_data, custom_data, event_name, event_time, action_source, event_id, event_source_url, fbclid } = req.body;
 
   const eventData = {
     event_name: event_name || 'Purchase',
@@ -34,19 +23,23 @@ app.post('/purchase', async (req, res) => {
     user_data: {
       client_user_agent: user_data?.client_user_agent,
       fbp: user_data?.fbp,
-      fbc: user_data?.fbc,
-      client_ip_address: client_ip_address,
+      client_ip_address: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
     },
     custom_data: {
       currency: custom_data?.currency || 'BRL',
       value: custom_data?.value || 1.00,
     },
     action_source: action_source || 'website',
-    event_id: event_id || uuidv4(),
+    event_id: event_id,
   };
+
+  if (fbclid && fbclid.trim() !== '') {
+    eventData.fbclid = fbclid;
+  }
 
   const payload = {
     data: [eventData],
+    test_event_code: null,
   };
 
   const PIXEL_ID = process.env.FB_PIXEL_ID;
