@@ -9,7 +9,7 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.post('/purchase', async (req, res) => {
-  const { user_data, custom_data, event_name, event_time, action_source, event_id, event_source_url, fbclid } = req.body;
+  const { user_data, custom_data, event_name, event_time, action_source, event_id, event_source_url, fbc } = req.body;
 
   const eventData = {
     event_name: event_name || 'Purchase',
@@ -19,6 +19,7 @@ app.post('/purchase', async (req, res) => {
       client_user_agent: user_data?.client_user_agent,
       fbp: user_data?.fbp,
       client_ip_address: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      fbc: fbc, // Agora enviamos o fbc aqui
     },
     custom_data: {
       currency: custom_data?.currency || 'BRL',
@@ -27,11 +28,6 @@ app.post('/purchase', async (req, res) => {
     action_source: action_source || 'website',
     event_id: event_id,
   };
-
-  // Adiciona o fbclid apenas se ele existir e não for vazio
-  if (fbclid && fbclid.trim() !== '') {
-    eventData.fbclid = fbclid;
-  }
 
   const payload = {
     data: [eventData],
