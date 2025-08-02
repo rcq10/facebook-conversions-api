@@ -11,26 +11,30 @@ app.use(bodyParser.json());
 app.post('/purchase', async (req, res) => {
   const { user_data, custom_data, event_name, event_time, action_source, event_id, event_source_url, fbclid } = req.body;
 
+  const eventData = {
+    event_name: event_name || 'Purchase',
+    event_time: event_time || Math.floor(Date.now() / 1000),
+    event_source_url: event_source_url,
+    user_data: {
+      client_user_agent: user_data?.client_user_agent,
+      fbp: user_data?.fbp,
+      client_ip_address: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+    },
+    custom_data: {
+      currency: custom_data?.currency || 'BRL',
+      value: custom_data?.value || 1.00,
+    },
+    action_source: action_source || 'website',
+    event_id: event_id,
+  };
+
+  // Adiciona o fbclid apenas se ele existir e não for vazio
+  if (fbclid && fbclid.trim() !== '') {
+    eventData.fbclid = fbclid;
+  }
+
   const payload = {
-    data: [
-      {
-        event_name: event_name || 'Purchase',
-        event_time: event_time || Math.floor(Date.now() / 1000),
-        event_source_url: event_source_url,
-        user_data: {
-          client_user_agent: user_data?.client_user_agent,
-          fbp: user_data?.fbp,
-          client_ip_address: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
-        },
-        custom_data: {
-          currency: custom_data?.currency || 'BRL',
-          value: custom_data?.value || 1.00,
-        },
-        action_source: action_source || 'website',
-        event_id: event_id,
-        fbclid: fbclid, // fbclid agora está aqui, no nível correto
-      }
-    ],
+    data: [eventData],
     test_event_code: null,
   };
 
