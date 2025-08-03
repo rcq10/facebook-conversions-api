@@ -3,7 +3,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const axios = require('axios');
 const cors = require('cors');
-const { v4: uuidv4 } = require('uuid');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -42,7 +41,7 @@ app.post('/purchase', async (req, res) => {
       value: custom_data?.value || 1.00,
     },
     action_source: action_source || 'website',
-    event_id: event_id || uuidv4(),
+    event_id: event_id, // ← Mantido apenas o que vier do frontend
   };
 
   const payload = {
